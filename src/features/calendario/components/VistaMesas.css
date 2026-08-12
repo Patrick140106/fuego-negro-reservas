@@ -1,0 +1,122 @@
+/* Contenedor principal del plano */
+.plano-container {
+  display: flex;
+  background-color: #e6f0fa; 
+  border: 4px solid #8ca8c4; 
+  border-radius: 4px;
+  padding: 15px;
+  min-height: 500px;
+  position: relative;
+  font-family: Arial, sans-serif;
+  color: #1a202c;
+}
+
+/* Muros interiores */
+.muro-divisor {
+  width: 4px;
+  background-color: #8ca8c4;
+  margin: 0 15px;
+  position: relative;
+}
+
+.con-puerta {
+  display: flex;
+  align-items: center;
+}
+
+.puerta-grafica {
+  width: 4px;
+  height: 60px;
+  background-color: #e6f0fa; 
+  position: relative;
+}
+
+.puerta-grafica::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -2px;
+  width: 2px;
+  height: 60px;
+  background-color: #3b82f6;
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.5); 
+}
+
+/* Secciones del plano */
+.plano-seccion {
+  padding: 10px;
+}
+
+.seccion-servicios { width: 120px; display: flex; flex-direction: column; gap: 20px; border-right: 2px solid #8ca8c4; padding-right: 15px; }
+.seccion-principal { flex: 2; }
+.seccion-terraza { flex: 1; }
+
+/* Gráficos decorativos de la izquierda */
+.bano-grafico { width: 100%; height: 80px; border: 2px solid #8ca8c4; border-radius: 0 0 40px 0; border-top: none; border-left: none; }
+.escalera-grafica { border: 2px solid #8ca8c4; border-left: none; width: 100%; }
+.peldano { height: 20px; border-bottom: 1px solid #8ca8c4; display: flex; align-items: center; padding-left: 5px; font-size: 0.8em; }
+
+/* Layout de las mesas */
+.grid-mesas-principal { display: grid; grid-template-columns: 1fr 1fr; gap: 40px 20px; justify-items: center; }
+.grid-mesas-terraza { display: flex; flex-direction: column; gap: 40px; align-items: center; justify-content: center; height: 80%; }
+
+/* ESTILOS DE MESAS Y SILLAS */
+.mesa-wrapper { position: relative; display: flex; justify-content: center; align-items: center; }
+
+.mesa-cuadrada {
+  width: 90px; height: 70px;
+  border-radius: 12px;
+  border: 2px solid;
+  z-index: 2;
+  position: relative;
+}
+
+.mesa-redonda {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  border: 2px solid;
+  z-index: 2;
+  position: relative;
+}
+
+.mesa-wrapper small { font-size: 0.65em; font-weight: normal; }
+
+/* Sillas rectangulares (Salón principal) */
+.silla { position: absolute; width: 40px; height: 12px; border: 2px solid; border-radius: 6px; z-index: 1; }
+.silla-top { top: -8px; }
+.silla-bottom { bottom: -8px; }
+
+/* Sillas circulares (Terraza) */
+.silla-circular { position: absolute; width: 20px; height: 20px; border: 2px solid; border-radius: 50%; z-index: 1; }
+.sc-1 { top: -10px; }
+.sc-2 { bottom: -10px; }
+.sc-3 { left: -10px; }
+.sc-4 { right: -10px; }
+
+/* COLORES DE ESTADO (Mapeados desde React) */
+/* 1. Disponible (Verde) */
+.estado-disponible, .bg-disponible { background-color: #a7f3d0; border-color: #059669; color: #064e3b; }
+.silla.estado-disponible, .silla-circular.estado-disponible { background-color: #6ee7b7; }
+
+/* 2. Reservada  */
+.estado-reservada, .bg-reservada { background-color: #cbd5e1; border-color: #475569; color: #1e293b; }
+.silla.estado-reservada, .silla-circular.estado-reservada { background-color: #94a3b8; }
+
+/* 3. Pendiente  */
+.estado-pendiente, .bg-pendiente { background-color: #bfdbfe; border-color: #2563eb; color: #1e3a8a; }
+.silla.estado-pendiente, .silla-circular.estado-pendiente { background-color: #93c5fd; }
+
+/* 4. Conflicto  */
+.estado-conflicto, .bg-conflicto { background-color: #fecaca; border-color: #dc2626; color: #7f1d1d; }
+.silla.estado-conflicto, .silla-circular.estado-conflicto { background-color: #fca5a5; }
+
+/* Leyenda superior */
+.leyenda-color { width: 16px; height: 16px; display: inline-block; border-radius: 4px; border: 1px solid rgba(0,0,0,0.2); }
+
+/* Animación de conflicto */
+.pulse-anim { animation: pulseError 1.5s infinite; }
+@keyframes pulseError {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
+  70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+}

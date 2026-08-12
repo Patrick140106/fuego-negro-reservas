@@ -1,0 +1,44 @@
+.modal-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex; justify-content: center; align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white; padding: 25px; border-radius: 8px;
+  width: 450px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  font-family: sans-serif;
+}
+
+.modal-header {
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid #e5e7eb; padding-bottom: 10px; margin-bottom: 15px;
+}
+
+.modal-header h2 { margin: 0; color: #b91c1c; font-size: 1.2em; }
+.btn-cerrar { background: none; border: none; font-size: 1.2em; cursor: pointer; color: #6b7280; }
+
+.opciones-resolucion { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
+.opciones-resolucion h4 { margin: 0 0 10px 0; color: #374151; }
+
+.opcion-btn {
+  padding: 12px; border: 2px solid #e5e7eb; background: #f9fafb;
+  cursor: pointer; text-align: left; border-radius: 6px; font-size: 0.95em;
+  transition: all 0.2s;
+}
+
+.opcion-btn:hover { border-color: #93c5fd; }
+.opcion-btn.seleccionada { border-color: #2563eb; background: #eff6ff; font-weight: bold; }
+
+.modal-footer {
+  margin-top: 25px; display: flex; justify-content: flex-end; gap: 10px;
+}
+
+.btn-cancelar {
+  padding: 10px 15px; background: #e5e7eb; border: none; border-radius: 5px; cursor: pointer;
+}
+
+.btn-confirmar {
+  padding: 10px 15px; background: #2563eb; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;
+}

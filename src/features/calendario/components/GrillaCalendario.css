@@ -1,0 +1,96 @@
+.contenedor-calendario {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  font-family: sans-serif;
+}
+
+.cabecera-zonas {
+  display: flex;
+  background-color: #f9fafb;
+  font-weight: bold;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.columna-hora, .columna-zona {
+  padding: 12px;
+  text-align: center;
+  border-right: 1px solid #e5e7eb;
+}
+
+.columna-hora { width: 100px; }
+.columna-zona { flex: 1; }
+
+.fila-hora {
+  display: flex;
+  border-bottom: 1px solid #e5e7eb;
+  min-height: 80px;
+}
+
+.celda-hora {
+  width: 100px;
+  padding: 12px;
+  background-color: #f9fafb;
+  border-right: 1px solid #e5e7eb;
+  font-size: 0.9em;
+  color: #4b5563;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.celda-zona {
+  flex: 1;
+  padding: 8px;
+  border-right: 1px solid #e5e7eb;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tarjeta-mesa {
+  padding: 8px;
+  border-radius: 6px;
+  font-size: 0.85em;
+  display: flex;
+  flex-direction: column;
+  min-width: 100px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.tarjeta-mesa:hover {
+  transform: scale(1.05);
+}
+
+/* Colores de Estado basados en la Guía 1 */
+.estado-confirmado { background-color: #bbf7d0; border: 1px solid #4ade80; color: #166534; }
+.estado-pendiente { background-color: #bfdbfe; border: 1px solid #60a5fa; color: #1e3a8a; }
+.estado-conflicto { background-color: #fecaca; border: 1px solid #f87171; color: #991b1b; animation: latido 2s infinite; }
+
+.alerta-icono {
+  margin-top: 4px;
+  font-size: 0.8em;
+  font-weight: bold;
+}
+
+.leyenda-estados {
+  display: flex;
+  gap: 15px;
+  padding: 15px;
+  background-color: #fff;
+}
+
+.leyenda-item { display: flex; align-items: center; gap: 5px; font-size: 0.9em; }
+.color-box { width: 16px; height: 16px; border-radius: 4px; }
+.color-box.confirmado { background-color: #bbf7d0; border: 1px solid #4ade80; }
+.color-box.pendiente { background-color: #bfdbfe; border: 1px solid #60a5fa; }
+.color-box.conflicto { background-color: #fecaca; border: 1px solid #f87171; }
+
+@keyframes latido {
+  0% { opacity: 1; }
+  50% { opacity: 0.7; }
+  100% { opacity: 1; }
+}
