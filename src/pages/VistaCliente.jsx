@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { toast, Toaster } from 'sonner';
-import { UserRound, Users, Building2, Armchair, LeafyGreen, UserCircle, Trash2, Menu, X } from 'lucide-react';
+import { UserRound, Users, Building2, Armchair, LeafyGreen, Trash2, Menu, X, CalendarCheck, Clock, MapPin, User, Phone, CheckCircle, Info } from 'lucide-react';
 import { ReservasContext } from '../shared/context/ReservasContext';
 import { supabase } from '../shared/utils/supabase';
 
@@ -10,12 +10,17 @@ const VistaCliente = () => {
   const [usuarioActual, setUsuarioActual] = useState(null);
   const [menuAbierto, setMenuAbierto] = useState(false); 
   
+  // ESTADO PARA CONTROLAR LA VISTA PRINCIPAL (Home vs Mis Reservas)
+  const [vistaPrincipal, setVistaPrincipal] = useState('home'); 
+  
+  // ESTADO PARA EL DETALLE DE LA RESERVA (Modal)
+  const [reservaDetalle, setReservaDetalle] = useState(null);
+
   const [tabComida, setTabComida] = useState('precios');
   const [tabVinos, setTabVinos] = useState('vinos');
   const [tabBebidas, setTabBebidas] = useState('sin-alcohol');
 
   const [pasoModal, setPasoModal] = useState(0); 
-  const [mostrarPerfil, setMostrarPerfil] = useState(false);
 
   const hoy = new Date().toISOString().split('T')[0];
 
@@ -29,23 +34,36 @@ const VistaCliente = () => {
   const mesasTerraza = ['Mesa 9', 'Mesa 10', 'Mesa 11', 'Mesa 12'];
 
   useEffect(() => {
-    const obtenerUsuario = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setUsuarioActual(user.email);
-        setDatosReserva(prev => ({ ...prev, correo: user.email }));
+    // 1. Verificación inicial de la sesión
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setUsuarioActual(session.user.email);
+        setDatosReserva(prev => ({ ...prev, correo: session.user.email }));
       }
-    };
-    obtenerUsuario();
+    });
+
+    // 2. EL VIGILANTE: Se asegura de mantener el usuario incluso si se refresca la página (Solución al Bug)
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUsuarioActual(session.user.email);
+        setDatosReserva(prev => ({ ...prev, correo: session.user.email }));
+      } else {
+        setUsuarioActual(null);
+      }
+    });
 
     const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      authListener.subscription.unsubscribe();
+    };
   }, []);
 
   const misReservas = reservas.filter(r => r.correo === usuarioActual);
 
-  const abrirModal = () => { 
+  const abrirModalReserva = () => { 
     setPasoModal(1); 
     setDatosReserva({ ...datosReserva, mesa: '', hora: '' });
     setMenuAbierto(false); 
@@ -70,13 +88,24 @@ const VistaCliente = () => {
     agregarReserva(nuevaReserva);
     toast.success(`¡Reserva confirmada en ${datosReserva.sede}! Te esperamos.`);
     cerrarModal();
+    setVistaPrincipal('reservas'); // Redirigir a sus reservas al terminar
   };
 
   const handleCancelarReserva = (id) => {
     if(window.confirm('¿Estás seguro que deseas cancelar esta reserva?')) {
       eliminarReserva(id);
       toast.info('Reserva cancelada exitosamente.');
+      setReservaDetalle(null); // Cerrar el detalle si se cancela
     }
+  };
+
+  // Navegación inteligente
+  const irASeccion = (seccion) => {
+    setVistaPrincipal('home');
+    setMenuAbierto(false);
+    setTimeout(() => {
+      window.location.hash = seccion;
+    }, 100);
   };
 
   return (
@@ -94,8 +123,8 @@ const VistaCliente = () => {
         
         .navbar-transicion { transition: all 0.4s ease; }
         .nav-scrolled { background-color: rgba(10, 10, 10, 0.98) !important; backdrop-filter: blur(12px); border-bottom: 1px solid #262626; padding-top: 10px !important; padding-bottom: 10px !important; }
-        .nav-link-custom { color: #e5e7eb !important; font-family: 'Montserrat', sans-serif; font-size: 0.85rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin: 0 10px; transition: 0.3s; }
-        .nav-link-custom:hover { color: #ea580c !important; }
+        .nav-link-custom { color: #e5e7eb !important; font-family: 'Montserrat', sans-serif; font-size: 0.85rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin: 0 10px; transition: 0.3s; cursor: pointer; }
+        .nav-link-custom:hover, .nav-link-custom.activo { color: #ea580c !important; }
         
         .modal-overlay-elegante { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); backdrop-filter: blur(10px); z-index: 9999; display: flex; justify-content: center; align-items: center; opacity: 0; animation: fadeIn 0.3s forwards; overflow-y: auto; padding: 20px 10px; }
         @keyframes fadeIn { to { opacity: 1; } }
@@ -138,6 +167,9 @@ const VistaCliente = () => {
         .social-icon { display: inline-flex; align-items: center; justify-content: center; width: 35px; height: 35px; background-color: #1a1a1a; border-radius: 50%; color: #fff; text-decoration: none; transition: all 0.3s; font-weight: bold; }
         .social-icon:hover { background-color: #ea580c; transform: translateY(-3px); }
 
+        .tarjeta-reserva-dashboard { background-color: #111; border: 1px solid #262626; border-radius: 12px; padding: 25px; transition: all 0.3s ease; cursor: pointer; }
+        .tarjeta-reserva-dashboard:hover { border-color: #ea580c; transform: translateY(-3px); box-shadow: 0 10px 20px rgba(234, 88, 12, 0.1); }
+
         @media (max-width: 768px) {
           .hero-title { font-size: 2.2rem !important; letter-spacing: 0px !important; }
           .hero-subtitle { font-size: 0.75rem !important; letter-spacing: 2px !important; }
@@ -153,79 +185,341 @@ const VistaCliente = () => {
         }
       `}</style>
 
-      <nav className={`navbar navbar-expand-lg navbar-dark fixed-top w-100 p-3 p-md-4 navbar-transicion ${scrolled || menuAbierto ? 'nav-scrolled' : 'bg-transparent'}`}>
+      {/* NAVBAR ACTUALIZADO CON RUTAS */}
+      <nav className={`navbar navbar-expand-lg navbar-dark fixed-top w-100 p-3 p-md-4 navbar-transicion ${scrolled || menuAbierto || vistaPrincipal !== 'home' ? 'nav-scrolled' : 'bg-transparent'}`}>
         <div className="container">
-          <a className="navbar-brand fuente-titulos fs-4 fs-md-3" style={{ letterSpacing: '2px', fontWeight: '700' }} href="#">
+          <a className="navbar-brand fuente-titulos fs-4 fs-md-3" style={{ letterSpacing: '2px', fontWeight: '700', cursor: 'pointer' }} onClick={() => irASeccion('inicio')}>
             FUEGO <span style={{ color: '#ea580c' }}>NEGRO</span>
           </a>
           
-          {/* Aquí le damos el control total a React y quitamos los atributos por defecto de Bootstrap */}
           <button className="navbar-toggler border-0 shadow-none" type="button" onClick={() => setMenuAbierto(!menuAbierto)}>
             {menuAbierto ? <X color="white" /> : <Menu color="white" />}
           </button>
           
-          {/* Agregamos la clase 'show' condicionalmente basada en nuestro estado menuAbierto */}
           <div className={`collapse navbar-collapse text-center text-lg-start ${menuAbierto ? 'show' : ''}`} id="navbarNav">
             <ul className="navbar-nav mx-auto py-3 py-lg-0">
-              <li className="nav-item"><a className="nav-link nav-link-custom my-2 my-lg-0" href="#historia" onClick={() => setMenuAbierto(false)}>Nosotros</a></li>
-              <li className="nav-item"><a className="nav-link nav-link-custom my-2 my-lg-0" href="#estaciones" onClick={() => setMenuAbierto(false)}>Estaciones</a></li>
-              <li className="nav-item"><a className="nav-link nav-link-custom my-2 my-lg-0" href="#carta" onClick={() => setMenuAbierto(false)}>Nuestra Carta</a></li>
-              <li className="nav-item"><a className="nav-link nav-link-custom my-2 my-lg-0" href="#ambientes" onClick={() => setMenuAbierto(false)}>Locales</a></li>
+              <li className="nav-item"><a className={`nav-link nav-link-custom my-2 my-lg-0 ${vistaPrincipal === 'home' ? 'activo' : ''}`} onClick={() => irASeccion('historia')}>Nosotros</a></li>
+              <li className="nav-item"><a className="nav-link nav-link-custom my-2 my-lg-0" onClick={() => irASeccion('estaciones')}>Estaciones</a></li>
+              <li className="nav-item"><a className="nav-link nav-link-custom my-2 my-lg-0" onClick={() => irASeccion('carta')}>Carta</a></li>
+              <li className="nav-item"><a className="nav-link nav-link-custom my-2 my-lg-0" onClick={() => irASeccion('ambientes')}>Locales</a></li>
+              
+              {/* NUEVO ENLACE: MIS RESERVAS */}
+              <li className="nav-item d-lg-none border-top mt-2 pt-2 border-secondary">
+                <a className={`nav-link nav-link-custom my-2 my-lg-0 ${vistaPrincipal === 'reservas' ? 'activo' : ''}`} onClick={() => { setVistaPrincipal('reservas'); setMenuAbierto(false); }}>
+                  Mis Reservas
+                </a>
+              </li>
             </ul>
             <div className="d-flex flex-column flex-lg-row align-items-center gap-3 mt-3 mt-lg-0 pb-3 pb-lg-0">
-              <button className="btn btn-outline-light d-flex align-items-center justify-content-center gap-2 border-0 w-100 w-lg-auto" onClick={() => { setMostrarPerfil(true); setMenuAbierto(false); }}>
-                <UserCircle size={24} /> <span className="fw-bold">Mi Perfil</span>
+              
+              {/* BOTON DE MIS RESERVAS EN ESCRITORIO */}
+              <button className="btn btn-outline-light d-none d-lg-flex align-items-center justify-content-center gap-2 border-0" onClick={() => setVistaPrincipal('reservas')} style={{ color: vistaPrincipal === 'reservas' ? '#ea580c' : 'white' }}>
+                <CalendarCheck size={20} /> <span className="fw-bold">Mis Reservas</span>
               </button>
-              <button className="btn w-100 w-lg-auto py-2 fuente-textos" style={{ backgroundColor: '#dc2626', color: '#fff', borderRadius: '4px', fontWeight: '700', letterSpacing: '1px', paddingLeft: '30px', paddingRight: '30px' }} onClick={abrirModal}>
-                RESERVAR
+              
+              <button className="btn w-100 w-lg-auto py-2 fuente-textos" style={{ backgroundColor: '#dc2626', color: '#fff', borderRadius: '4px', fontWeight: '700', letterSpacing: '1px', paddingLeft: '30px', paddingRight: '30px' }} onClick={abrirModalReserva}>
+                NUEVA RESERVA
               </button>
             </div>
           </div>
         </div>
       </nav>
 
-      {mostrarPerfil && (
-        <div className="modal-overlay-elegante">
-          <div className="modal-box-elegante p-0" style={{ maxWidth: '700px' }}>
-            <div className="d-flex justify-content-between align-items-center p-3 p-md-4 border-bottom" style={{ borderColor: '#333' }}>
-              <h4 className="m-0 fuente-titulos fs-5 fs-md-4" style={{ color: '#ea580c', letterSpacing: '1px' }}>Mi Historial</h4>
-              <button className="btn-close btn-close-white" onClick={() => setMostrarPerfil(false)}></button>
+      {/* RENDERIZADO CONDICIONAL DE LA VISTA */}
+      {vistaPrincipal === 'reservas' ? (
+        
+        // --- VISTA: DASHBOARD DE MIS RESERVAS ---
+        <div className="container" style={{ paddingTop: '120px', paddingBottom: '60px', minHeight: '80vh' }}>
+          <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-5 gap-3">
+            <div>
+              <h2 className="fs-1 fw-bold text-white fuente-titulos m-0">Mis Reservas</h2>
+              <p className="text-muted mt-2 mb-0">Gestiona y revisa tus reservas activas e historial.</p>
             </div>
-            <div className="p-3 p-md-5">
-              <p className="text-light mb-4" style={{ fontSize: '0.9rem' }}>Usuario: <strong className="text-white text-break">{usuarioActual}</strong></p>
-              
-              {misReservas.length === 0 ? (
-                <div className="text-center py-5">
-                  <h5 className="text-light mb-3 fs-6 fs-md-5">Aún no tienes reservas con nosotros.</h5>
-                  <button className="btn fw-bold px-4 py-2 w-100 w-md-auto" style={{ background: '#ea580c', color: 'white' }} onClick={() => { setMostrarPerfil(false); abrirModal(); }}>
-                    Hacer primera reserva
-                  </button>
-                </div>
-              ) : (
-                <div className="d-flex flex-column gap-3">
-                  {misReservas.map(res => (
-                    <div key={res.id} className="p-3 p-md-4 rounded d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center border gap-3" style={{ backgroundColor: '#1a1a1a', borderColor: '#333' }}>
-                      <div className="w-100">
-                        <h5 className="text-white mb-1 fw-bold fs-6 fs-md-5">{res.sede} - {res.fecha}</h5>
-                        <p className="text-muted m-0" style={{fontSize: '0.85rem'}}>
-                          {res.hora} • {res.zona} ({res.mesa}) • {res.personas} Pers.
-                        </p>
-                        <span className={`badge mt-2 px-3 py-2 ${res.estado === 'pendiente' ? 'bg-warning text-dark' : 'bg-success'}`}>
-                          {res.estado.toUpperCase()}
-                        </span>
-                      </div>
-                      <button className="btn btn-outline-danger d-flex align-items-center justify-content-center gap-2 w-100 w-md-auto py-2" onClick={() => handleCancelarReserva(res.id)}>
-                        <Trash2 size={18} /> <span>Cancelar</span>
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
+            <div className="bg-dark px-3 py-2 rounded border border-secondary d-flex align-items-center gap-2 text-light" style={{ fontSize: '0.85rem' }}>
+              <User size={16} color="#ea580c" />
+              {usuarioActual}
             </div>
           </div>
+
+          {misReservas.length === 0 ? (
+            <div className="text-center py-5 my-5 border rounded" style={{ borderColor: '#262626', backgroundColor: '#111' }}>
+              <CalendarCheck size={64} color="#333" className="mb-4 mx-auto" />
+              <h4 className="text-light mb-3">Aún no tienes reservas con nosotros</h4>
+              <p className="text-muted mb-4">Anímate a vivir la experiencia Fuego Negro.</p>
+              <button className="btn fw-bold px-4 py-2" style={{ background: '#ea580c', color: 'white' }} onClick={abrirModalReserva}>
+                Hacer mi primera reserva
+              </button>
+            </div>
+          ) : (
+            <div className="row g-4">
+              {misReservas.map(res => (
+                <div key={res.id} className="col-12 col-md-6 col-lg-4">
+                  <div className="tarjeta-reserva-dashboard h-100 d-flex flex-column" onClick={() => setReservaDetalle(res)}>
+                    <div className="d-flex justify-content-between align-items-start mb-3">
+                      <span className={`badge px-3 py-2 ${res.estado === 'pendiente' ? 'bg-warning text-dark' : 'bg-success'}`}>
+                        {res.estado.toUpperCase()}
+                      </span>
+                      <Info size={20} color="#555" />
+                    </div>
+                    
+                    <h4 className="text-white fw-bold mb-1">{res.sede}</h4>
+                    <p className="text-muted mb-4 pb-3 border-bottom border-secondary" style={{ fontSize: '0.9rem' }}>
+                      {res.fecha}
+                    </p>
+                    
+                    <div className="mt-auto">
+                      <div className="d-flex align-items-center gap-2 text-light mb-2" style={{ fontSize: '0.85rem' }}>
+                        <Clock size={16} color="#ea580c" /> <span>{res.hora}</span>
+                      </div>
+                      <div className="d-flex align-items-center gap-2 text-light mb-2" style={{ fontSize: '0.85rem' }}>
+                        <MapPin size={16} color="#ea580c" /> <span>{res.zona} ({res.mesa})</span>
+                      </div>
+                      <div className="d-flex align-items-center gap-2 text-light" style={{ fontSize: '0.85rem' }}>
+                        <Users size={16} color="#ea580c" /> <span>{res.personas} Personas</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+      ) : (
+
+        // --- VISTA: INICIO / LANDING PAGE ---
+        <div>
+          <header id="inicio" className="hero-section position-relative d-flex align-items-center justify-content-center text-center" style={{ height: '100vh', minHeight: '500px' }}>
+            <div className="position-relative px-3" style={{ zIndex: 2, maxWidth: '900px', marginTop: '60px' }}>
+              <h5 className="fw-bold hero-subtitle fuente-textos" style={{ color: '#ea580c', letterSpacing: '5px', textTransform: 'uppercase', marginBottom: '20px', fontSize: '0.85rem' }}>La Excelencia a la Brasa</h5>
+              <h1 className="fw-bold mb-4 hero-title fuente-titulos">Cortes Premium & Buffet Ilimitado</h1>
+            </div>
+          </header>
+
+          <section id="historia" className="seccion-ancla container py-5 my-3 my-md-5">
+            <div className="row align-items-center">
+              <div className="col-md-6 pe-md-5 mb-4 text-center text-md-start">
+                <h6 className="fw-bold" style={{ color: '#ea580c', letterSpacing: '2px' }}>NUESTRA HISTORIA</h6>
+                <h2 className="fs-1 fw-bold mb-4 text-white fuente-titulos">Pasión por el fuego, tradición en cada corte.</h2>
+                <p className="fuente-textos" style={{ color: '#d1d5db', lineHeight: '1.7', fontSize: '0.95rem' }}>Desde nuestros inicios, Fuego Negro nació con una premisa simple: respetar el producto. No somos solo un asador, somos una experiencia culinaria donde la leña, el humo y el tiempo son nuestros principales ingredientes.</p>
+              </div>
+              <div className="col-md-6">
+                <img src="https://plus.unsplash.com/premium_photo-1661721578455-d13b23ec66c8?w=500&auto=format&fit=crop&q=60" alt="Historia" className="img-historia shadow-lg" />
+              </div>
+            </div>
+          </section>
+
+          <section id="estaciones" className="seccion-ancla py-5 my-3 my-md-5" style={{ backgroundColor: '#111' }}>
+            <div className="container py-4">
+              <div className="text-center mb-4 mb-md-5">
+                <h6 className="fw-bold" style={{ color: '#ea580c', letterSpacing: '2px' }}>ILIMITADA</h6>
+                <h2 className="fs-1 fw-bold text-white fuente-titulos">Estaciones</h2>
+              </div>
+              <div className="row g-3 g-md-4">
+                <div className="col-12 col-sm-6 col-lg-3">
+                  <div className="estacion-card shadow">
+                    <img src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=600" className="img-estacion" alt="Parrilla" />
+                    <div className="estacion-overlay text-white"><h5 className="fw-bold m-0 fuente-titulos">La Parrilla</h5><small>Cortes Premium</small></div>
+                  </div>
+                </div>
+                <div className="col-12 col-sm-6 col-lg-3">
+                  <div className="estacion-card shadow">
+                    <img src="https://images.unsplash.com/photo-1766456127047-806cdecdc139?w=500&auto=format&fit=crop&q=60" className="img-estacion" alt="Criollo" />
+                    <div className="estacion-overlay text-white"><h5 className="fw-bold m-0 fuente-titulos">Sabor Criollo</h5><small>Tradicional</small></div>
+                  </div>
+                </div>
+                <div className="col-12 col-sm-6 col-lg-3">
+                  <div className="estacion-card shadow">
+                    <img src="https://images.unsplash.com/photo-1697155406432-29e76141cde6?w=500&auto=format&fit=crop&q=60" className="img-estacion" alt="Pastas" />
+                    <div className="estacion-overlay text-white"><h5 className="fw-bold m-0 fuente-titulos">Pastas</h5><small>Artesanales</small></div>
+                  </div>
+                </div>
+                <div className="col-12 col-sm-6 col-lg-3">
+                  <div className="estacion-card shadow">
+                    <img src="https://images.unsplash.com/photo-1664992915025-e5e4bbd67fe1?w=500&auto=format&fit=crop&q=60" className="img-estacion" alt="Mar" />
+                    <div className="estacion-overlay text-white"><h5 className="fw-bold m-0 fuente-titulos">Barra Marina</h5><small>Cebiches</small></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section id="carta" className="seccion-ancla container py-5 my-3 my-md-5 text-center px-3">
+            <h2 className="fs-1 fw-bold text-white mb-4 fuente-titulos">Nuestra Carta</h2>
+            <p className="mb-4 py-3 border-top border-bottom fw-bold" style={{ color: '#a3a3a3', letterSpacing: '2px', fontSize: '0.75rem', borderColor: '#333 !important' }}>
+              TOMAR BEBIDAS ALCOHÓLICAS EN EXCESO ES DAÑINO
+            </p>
+
+            <div className="d-flex flex-column flex-md-row justify-content-center w-100 mx-auto mt-4" style={{ maxWidth: '1000px' }}>
+              <button className={`menu-tab ${tabComida === 'precios' ? 'activa' : 'inactiva'}`} onClick={() => setTabComida('precios')}>NUESTROS PRECIOS</button>
+              <button className={`menu-tab ${tabComida === 'postres' ? 'activa' : 'inactiva'}`} onClick={() => setTabComida('postres')}>POSTRES</button>
+            </div>
+            
+            {tabComida === 'precios' && (
+              <div className="menu-card mx-auto text-center shadow-sm" style={{ maxWidth: '1000px' }}>
+                <h4 className="fw-bold mb-4" style={{ color: '#d83b20' }}>Buffet Libre</h4>
+                <div className="menu-item mx-auto" style={{ maxWidth: '700px' }}><span className="fw-bold">Adultos</span> <span className="menu-dots"></span> <span className="fw-bold">S/99</span></div>
+                <div className="menu-item mx-auto mb-4" style={{ maxWidth: '700px' }}>
+                  <div className="text-start"><span className="fw-bold">Niños</span><br/><small className="text-muted" style={{fontSize:'0.7rem'}}>(4 a 10 años)</small></div>
+                  <span className="menu-dots"></span> <span className="fw-bold">S/46</span>
+                </div>
+                <p className="text-muted mt-3 mb-1 fw-semibold" style={{ fontSize: '0.85rem' }}>Almuerzo y cena buffet de Lunes a Domingo y feriados</p>
+                <p className="text-muted mb-1 fw-semibold" style={{ fontSize: '0.85rem' }}>Incluye IGV (18%). No incluye bebidas.</p>
+              </div>
+            )}
+
+            {tabComida === 'postres' && (
+              <div className="mx-auto shadow-sm overflow-hidden bg-white text-start rounded" style={{ maxWidth: '1000px' }}>
+                <div className="row g-0">
+                  <div className="col-md-6 p-4 p-md-5 d-flex flex-column justify-content-center">
+                    <h4 className="fw-bold mb-4" style={{ color: '#d83b20' }}>Postres</h4>
+                    <p className="fw-bold mb-2 text-dark">Pasión De Chocolate</p>
+                    <p className="fw-bold mb-2 text-dark">Panqueque De Carretera</p>
+                    <p className="fw-bold mb-2 text-dark">Volcán Dulce De Leche</p>
+                    <p className="fw-bold mb-2 text-dark">Tres Leches</p>
+                    <p className="fw-bold mb-2 text-dark">Tiramisú</p>
+                    <p className="fw-bold mb-2 text-dark">Torta Húmeda De Chocolate</p>
+                    
+                    <div className="menu-item mx-auto mt-4" style={{ width: '100%' }}>
+                      <span className="text-dark">Postre adicional</span> <span className="menu-dots"></span> <span className="fw-bold text-dark">S/16.5</span>
+                    </div>
+                    <div className="menu-item mx-auto" style={{ width: '100%' }}>
+                      <span className="text-dark">Helado adicional</span> <span className="menu-dots"></span> <span className="fw-bold text-dark">S/6.5</span>
+                    </div>
+                  </div>
+                  <div className="col-md-6 p-3 p-md-4 bg-light">
+                    <div className="row g-2 h-100 align-content-center">
+                      <div className="col-6"><img src="https://images.unsplash.com/photo-1606313564200-e75d5e30476c?q=80&w=400" className="postre-img" alt="Postre 1"/></div>
+                      <div className="col-6"><img src="https://plus.unsplash.com/premium_photo-1672846027109-e2c91500afef?w=500&auto=format&fit=crop&q=60" className="postre-img" alt="Postre 2"/></div>
+                      <div className="col-6"><img src="https://gourmet.iprospect.cl/wp-content/uploads/2016/09/Torta-3-leches.jpg" className="postre-img" alt="Postre 3"/></div>
+                      <div className="col-6"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQTEmN5y6s1Ftlt2099hKZusWeF4yuqetcfTw&s" className="postre-img" alt="Postre 4"/></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="d-flex flex-column flex-md-row justify-content-center w-100 mx-auto mt-5 pt-3" style={{ maxWidth: '1000px' }}>
+              <button className={`menu-tab ${tabVinos === 'vinos' ? 'activa' : 'inactiva'}`} onClick={() => setTabVinos('vinos')}>VINOS & SANGRIAS</button>
+              <button className={`menu-tab ${tabVinos === 'otros' ? 'activa' : 'inactiva'}`} onClick={() => setTabVinos('otros')}>OTROS VINOS</button>
+            </div>
+
+            {tabVinos === 'vinos' && (
+              <div className="row g-3 mx-auto text-start" style={{ maxWidth: '1000px' }}>
+                <div className="col-12 col-md-6">
+                  <div className="menu-card h-100 shadow-sm">
+                    <h5 className="fw-bold mb-4" style={{ color: '#d83b20' }}>Por Copa</h5>
+                    <div className="menu-item mt-3">
+                      <div className="text-start"><span className="fw-bold">Vino Fuego Negro</span><br/><small className="text-muted" style={{fontSize:'0.7rem'}}>(Malbec, C. Sauvignon, Rosé)</small></div>
+                      <span className="menu-dots"></span> <span className="fw-bold">S/22</span>
+                    </div>
+                    <div className="menu-item"><span>Sangría</span> <span className="menu-dots"></span> <span className="fw-bold">S/13</span></div>
+                    <div className="menu-item"><span>Tinto de Verano</span> <span className="menu-dots"></span> <span className="fw-bold">S/22</span></div>
+                  </div>
+                </div>
+                <div className="col-12 col-md-6">
+                  <div className="menu-card h-100 shadow-sm">
+                    <h5 className="fw-bold mb-4" style={{ color: '#d83b20' }}>Por Jarra / Botella</h5>
+                    <div className="menu-item"><span>1/2 Jarra Sangría</span> <span className="menu-dots"></span> <span className="fw-bold">S/27</span></div>
+                    <div className="menu-item"><span>Jarra Sangría</span> <span className="menu-dots"></span> <span className="fw-bold">S/48</span></div>
+                    <div className="menu-item mt-4">
+                      <div className="text-start"><span className="fw-bold">Botella Vino Fuego Negro</span></div>
+                      <span className="menu-dots"></span> <span className="fw-bold">S/85</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {tabVinos === 'otros' && (
+              <div className="menu-card mx-auto shadow-sm text-center" style={{ maxWidth: '1000px', padding: '40px' }}>
+                 <p className="fw-bold text-muted m-0">Pregunta a tu mesero por nuestra selecta cava de vinos internacionales y de reserva.</p>
+              </div>
+            )}
+
+            <div className="d-flex flex-column flex-md-row justify-content-center w-100 mx-auto mt-5 pt-3" style={{ maxWidth: '1000px' }}>
+              <button className={`menu-tab ${tabBebidas === 'sin-alcohol' ? 'activa' : 'inactiva'}`} onClick={() => setTabBebidas('sin-alcohol')}>SIN ALCOHOL</button>
+              <button className={`menu-tab ${tabBebidas === 'con-alcohol' ? 'activa' : 'inactiva'}`} onClick={() => setTabBebidas('con-alcohol')}>CON ALCOHOL</button>
+            </div>
+
+            {tabBebidas === 'sin-alcohol' && (
+              <div className="row g-3 mx-auto text-start" style={{ maxWidth: '1000px' }}>
+                <div className="col-12 col-md-6">
+                  <div className="menu-card h-100 shadow-sm">
+                    <h5 className="fw-bold mb-4" style={{ color: '#d83b20' }}>Frías</h5>
+                    <div className="menu-item"><span>Agua San Luis</span> <span className="menu-dots"></span> <span className="fw-bold">S/8.9</span></div>
+                    <div className="menu-item"><span>Iced Tea Clásico</span> <span className="menu-dots"></span> <span className="fw-bold">S/8.9</span></div>
+                    <div className="menu-item"><span>Limonada Clásica</span> <span className="menu-dots"></span> <span className="fw-bold">S/8.9</span></div>
+                    <div className="menu-item"><span>Chicha Morada</span> <span className="menu-dots"></span> <span className="fw-bold">S/8.9</span></div>
+                  </div>
+                </div>
+                <div className="col-12 col-md-6">
+                  <div className="menu-card h-100 shadow-sm">
+                    <h5 className="fw-bold mb-4" style={{ color: '#d83b20' }}>Calientes</h5>
+                    <div className="menu-item"><span>Café Expresso</span> <span className="menu-dots"></span> <span className="fw-bold">S/7.5</span></div>
+                    <div className="menu-item"><span>Café Americano</span> <span className="menu-dots"></span> <span className="fw-bold">S/7.5</span></div>
+                    <div className="menu-item"><span>Café Capuccino</span> <span className="menu-dots"></span> <span className="fw-bold">S/8.5</span></div>
+                    <div className="menu-item"><span>Infusiones Naturales</span> <span className="menu-dots"></span> <span className="fw-bold">S/6.5</span></div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {tabBebidas === 'con-alcohol' && (
+              <div className="row g-3 mx-auto text-start" style={{ maxWidth: '1000px' }}>
+                <div className="col-12 col-md-6">
+                  <div className="menu-card h-100 shadow-sm">
+                    <h5 className="fw-bold mb-4" style={{ color: '#d83b20' }}>Con Pisco</h5>
+                    <h6 className="fw-bold text-dark mb-3 mt-3">Sours</h6>
+                    <div className="menu-item"><span>Pisco Sour</span> <span className="menu-dots"></span> <span className="fw-bold">S/21</span></div>
+                    <div className="menu-item"><span>Maracuyá Sour</span> <span className="menu-dots"></span> <span className="fw-bold">S/21</span></div>
+                    <h6 className="fw-bold text-dark mb-3 mt-4">Chilcanos</h6>
+                    <div className="menu-item"><span>Clásico</span> <span className="menu-dots"></span> <span className="fw-bold">S/20</span></div>
+                  </div>
+                </div>
+                <div className="col-12 col-md-6 d-flex flex-column gap-3">
+                  <div className="menu-card shadow-sm flex-grow-1">
+                    <h5 className="fw-bold mb-3" style={{ color: '#d83b20' }}>Originales</h5>
+                    <div className="menu-item"><span>Pisquirinha de fresa</span> <span className="menu-dots"></span> <span className="fw-bold">S/22</span></div>
+                    <div className="menu-item"><span>Like Jagger</span> <span className="menu-dots"></span> <span className="fw-bold">S/22</span></div>
+                  </div>
+                  <div className="menu-card shadow-sm flex-grow-1">
+                    <h5 className="fw-bold mb-3" style={{ color: '#d83b20' }}>Con Ron</h5>
+                    <div className="menu-item"><span>Mojito</span> <span className="menu-dots"></span> <span className="fw-bold">S/21</span></div>
+                    <div className="menu-item"><span>Piña Colada</span> <span className="menu-dots"></span> <span className="fw-bold">S/21</span></div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </section>
+
+          <section id="ambientes" className="seccion-ancla container py-5 mb-5">
+            <h2 className="text-center display-5 fw-bold text-white mb-5 fuente-titulos">Espacios Diseñados para Ti</h2>
+            <div className="row text-center">
+              <div className="col-12 col-md-6 mb-4 px-3 px-md-4">
+                <div className="ambiente-card h-100 d-flex flex-column rounded-3 shadow overflow-hidden">
+                  <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=1000" alt="Salón" className="img-ambiente" />
+                  <div className="p-4 flex-grow-1">
+                    <h4 className="fw-bold mb-3 mt-2 fuente-titulos" style={{ color: '#ea580c' }}>Salón Principal</h4>
+                    <p className="fw-semibold" style={{ color: '#d1d5db', fontSize: '0.9rem' }}>Ambiente sofisticado. Iluminación tenue y cava a la vista.</p>
+                  </div>
+                </div>
+              </div>
+              <div className="col-12 col-md-6 mb-4 px-3 px-md-4">
+                <div className="ambiente-card h-100 d-flex flex-column rounded-3 shadow overflow-hidden">
+                  <img src="https://media.timeout.com/images/105490616/750/562/image.jpg" alt="Terraza" className="img-ambiente" />
+                  <div className="p-4 flex-grow-1">
+                    <h4 className="fw-bold mb-3 mt-2 fuente-titulos" style={{ color: '#ea580c' }}>La Terraza</h4>
+                    <p className="fw-semibold" style={{ color: '#d1d5db', fontSize: '0.9rem' }}>La mejor vista al aire libre con coctelería de autor.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
         </div>
       )}
 
+      {/* MODAL WIZARD PARA NUEVA RESERVA */}
       {pasoModal > 0 && (
         <div className="modal-overlay-elegante">
           <div className="modal-box-elegante p-0">
@@ -393,247 +687,69 @@ const VistaCliente = () => {
         </div>
       )}
 
-      <header className="hero-section position-relative d-flex align-items-center justify-content-center text-center" style={{ height: '100vh', minHeight: '500px' }}>
-        <div className="position-relative px-3" style={{ zIndex: 2, maxWidth: '900px', marginTop: '60px' }}>
-          <h5 className="fw-bold hero-subtitle fuente-textos" style={{ color: '#ea580c', letterSpacing: '5px', textTransform: 'uppercase', marginBottom: '20px', fontSize: '0.85rem' }}>La Excelencia a la Brasa</h5>
-          <h1 className="fw-bold mb-4 hero-title fuente-titulos">Cortes Premium & Buffet Ilimitado</h1>
-        </div>
-      </header>
-
-      <section id="historia" className="seccion-ancla container py-5 my-3 my-md-5">
-        <div className="row align-items-center">
-          <div className="col-md-6 pe-md-5 mb-4 text-center text-md-start">
-            <h6 className="fw-bold" style={{ color: '#ea580c', letterSpacing: '2px' }}>NUESTRA HISTORIA</h6>
-            <h2 className="fs-1 fw-bold mb-4 text-white fuente-titulos">Pasión por el fuego, tradición en cada corte.</h2>
-            <p className="fuente-textos" style={{ color: '#d1d5db', lineHeight: '1.7', fontSize: '0.95rem' }}>Desde nuestros inicios, Fuego Negro nació con una premisa simple: respetar el producto. No somos solo un asador, somos una experiencia culinaria donde la leña, el humo y el tiempo son nuestros principales ingredientes.</p>
-          </div>
-          <div className="col-md-6">
-            <img src="https://plus.unsplash.com/premium_photo-1661721578455-d13b23ec66c8?w=500&auto=format&fit=crop&q=60" alt="Historia" className="img-historia shadow-lg" />
-          </div>
-        </div>
-      </section>
-
-      <section id="estaciones" className="seccion-ancla py-5 my-3 my-md-5" style={{ backgroundColor: '#111' }}>
-        <div className="container py-4">
-          <div className="text-center mb-4 mb-md-5">
-            <h6 className="fw-bold" style={{ color: '#ea580c', letterSpacing: '2px' }}>ILIMITADA</h6>
-            <h2 className="fs-1 fw-bold text-white fuente-titulos">Estaciones</h2>
-          </div>
-          <div className="row g-3 g-md-4">
-            <div className="col-12 col-sm-6 col-lg-3">
-              <div className="estacion-card shadow">
-                <img src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=600" className="img-estacion" alt="Parrilla" />
-                <div className="estacion-overlay text-white"><h5 className="fw-bold m-0 fuente-titulos">La Parrilla</h5><small>Cortes Premium</small></div>
+      {/* MODAL DE DETALLE DE LA RESERVA DE USUARIO */}
+      {reservaDetalle && (
+        <div className="modal-overlay-elegante">
+          <div className="modal-box-elegante p-0" style={{ maxWidth: '500px' }}>
+            <div className="d-flex justify-content-between align-items-center p-3 p-md-4 border-bottom" style={{ borderColor: '#333' }}>
+              <h5 className="m-0 fuente-titulos fs-5" style={{ color: '#ea580c' }}>Detalle de Reserva</h5>
+              <button className="btn-close btn-close-white" onClick={() => setReservaDetalle(null)}></button>
+            </div>
+            
+            <div className="p-4">
+              <div className="text-center mb-4">
+                <CheckCircle size={48} color="#10b981" className="mx-auto mb-3" />
+                <h4 className="text-white fw-bold m-0">{reservaDetalle.sede}</h4>
+                <p className="text-muted m-0 mt-1">{reservaDetalle.fecha} • {reservaDetalle.hora}</p>
+                <span className={`badge mt-3 px-4 py-2 fs-6 ${reservaDetalle.estado === 'pendiente' ? 'bg-warning text-dark' : 'bg-success'}`}>
+                  {reservaDetalle.estado.toUpperCase()}
+                </span>
               </div>
-            </div>
-            <div className="col-12 col-sm-6 col-lg-3">
-              <div className="estacion-card shadow">
-                <img src="https://images.unsplash.com/photo-1766456127047-806cdecdc139?w=500&auto=format&fit=crop&q=60" className="img-estacion" alt="Criollo" />
-                <div className="estacion-overlay text-white"><h5 className="fw-bold m-0 fuente-titulos">Sabor Criollo</h5><small>Tradicional</small></div>
-              </div>
-            </div>
-            <div className="col-12 col-sm-6 col-lg-3">
-              <div className="estacion-card shadow">
-                <img src="https://images.unsplash.com/photo-1697155406432-29e76141cde6?w=500&auto=format&fit=crop&q=60" className="img-estacion" alt="Pastas" />
-                <div className="estacion-overlay text-white"><h5 className="fw-bold m-0 fuente-titulos">Pastas</h5><small>Artesanales</small></div>
-              </div>
-            </div>
-            <div className="col-12 col-sm-6 col-lg-3">
-              <div className="estacion-card shadow">
-                <img src="https://images.unsplash.com/photo-1664992915025-e5e4bbd67fe1?w=500&auto=format&fit=crop&q=60" className="img-estacion" alt="Mar" />
-                <div className="estacion-overlay text-white"><h5 className="fw-bold m-0 fuente-titulos">Barra Marina</h5><small>Cebiches</small></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      <section id="carta" className="seccion-ancla container py-5 my-3 my-md-5 text-center px-3">
-        <h2 className="fs-1 fw-bold text-white mb-4 fuente-titulos">Nuestra Carta</h2>
-        <p className="mb-4 py-3 border-top border-bottom fw-bold" style={{ color: '#a3a3a3', letterSpacing: '2px', fontSize: '0.75rem', borderColor: '#333 !important' }}>
-          TOMAR BEBIDAS ALCOHÓLICAS EN EXCESO ES DAÑINO
-        </p>
-
-        <div className="d-flex flex-column flex-md-row justify-content-center w-100 mx-auto mt-4" style={{ maxWidth: '1000px' }}>
-          <button className={`menu-tab ${tabComida === 'precios' ? 'activa' : 'inactiva'}`} onClick={() => setTabComida('precios')}>NUESTROS PRECIOS</button>
-          <button className={`menu-tab ${tabComida === 'postres' ? 'activa' : 'inactiva'}`} onClick={() => setTabComida('postres')}>POSTRES</button>
-        </div>
-        
-        {tabComida === 'precios' && (
-          <div className="menu-card mx-auto text-center shadow-sm" style={{ maxWidth: '1000px' }}>
-            <h4 className="fw-bold mb-4" style={{ color: '#d83b20' }}>Buffet Libre</h4>
-            <div className="menu-item mx-auto" style={{ maxWidth: '700px' }}><span className="fw-bold">Adultos</span> <span className="menu-dots"></span> <span className="fw-bold">S/99</span></div>
-            <div className="menu-item mx-auto mb-4" style={{ maxWidth: '700px' }}>
-              <div className="text-start"><span className="fw-bold">Niños</span><br/><small className="text-muted" style={{fontSize:'0.7rem'}}>(4 a 10 años)</small></div>
-              <span className="menu-dots"></span> <span className="fw-bold">S/46</span>
-            </div>
-            <p className="text-muted mt-3 mb-1 fw-semibold" style={{ fontSize: '0.85rem' }}>Almuerzo y cena buffet de Lunes a Domingo y feriados</p>
-            <p className="text-muted mb-1 fw-semibold" style={{ fontSize: '0.85rem' }}>Incluye IGV (18%). No incluye bebidas.</p>
-          </div>
-        )}
-
-        {tabComida === 'postres' && (
-          <div className="mx-auto shadow-sm overflow-hidden bg-white text-start rounded" style={{ maxWidth: '1000px' }}>
-            <div className="row g-0">
-              <div className="col-md-6 p-4 p-md-5 d-flex flex-column justify-content-center">
-                <h4 className="fw-bold mb-4" style={{ color: '#d83b20' }}>Postres</h4>
-                <p className="fw-bold mb-2 text-dark">Pasión De Chocolate</p>
-                <p className="fw-bold mb-2 text-dark">Panqueque De Carretera</p>
-                <p className="fw-bold mb-2 text-dark">Volcán Dulce De Leche</p>
-                <p className="fw-bold mb-2 text-dark">Tres Leches</p>
-                <p className="fw-bold mb-2 text-dark">Tiramisú</p>
-                <p className="fw-bold mb-2 text-dark">Torta Húmeda De Chocolate</p>
-                
-                <div className="menu-item mx-auto mt-4" style={{ width: '100%' }}>
-                  <span className="text-dark">Postre adicional</span> <span className="menu-dots"></span> <span className="fw-bold text-dark">S/16.5</span>
+              <div className="bg-dark rounded p-3 mb-4 border border-secondary text-light" style={{ fontSize: '0.9rem', lineHeight: '2' }}>
+                <div className="d-flex justify-content-between border-bottom border-secondary pb-2 mb-2">
+                  <span className="text-muted">A nombre de:</span> <span className="fw-bold">{reservaDetalle.cliente}</span>
                 </div>
-                <div className="menu-item mx-auto" style={{ width: '100%' }}>
-                  <span className="text-dark">Helado adicional</span> <span className="menu-dots"></span> <span className="fw-bold text-dark">S/6.5</span>
+                <div className="d-flex justify-content-between border-bottom border-secondary pb-2 mb-2">
+                  <span className="text-muted">Teléfono:</span> <span className="fw-bold">{reservaDetalle.telefono}</span>
+                </div>
+                <div className="d-flex justify-content-between border-bottom border-secondary pb-2 mb-2">
+                  <span className="text-muted">Ubicación:</span> <span className="fw-bold">{reservaDetalle.zona} ({reservaDetalle.mesa})</span>
+                </div>
+                <div className="d-flex justify-content-between">
+                  <span className="text-muted">Comensales:</span> <span className="fw-bold">{reservaDetalle.personas} Personas</span>
                 </div>
               </div>
-              <div className="col-md-6 p-3 p-md-4 bg-light">
-                <div className="row g-2 h-100 align-content-center">
-                  <div className="col-6"><img src="https://images.unsplash.com/photo-1606313564200-e75d5e30476c?q=80&w=400" className="postre-img" alt="Postre 1"/></div>
-                  <div className="col-6"><img src="https://plus.unsplash.com/premium_photo-1672846027109-e2c91500afef?w=500&auto=format&fit=crop&q=60" className="postre-img" alt="Postre 2"/></div>
-                  <div className="col-6"><img src="https://gourmet.iprospect.cl/wp-content/uploads/2016/09/Torta-3-leches.jpg" className="postre-img" alt="Postre 3"/></div>
-                  <div className="col-6"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQTEmN5y6s1Ftlt2099hKZusWeF4yuqetcfTw&s" className="postre-img" alt="Postre 4"/></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
-        <div className="d-flex flex-column flex-md-row justify-content-center w-100 mx-auto mt-5 pt-3" style={{ maxWidth: '1000px' }}>
-          <button className={`menu-tab ${tabVinos === 'vinos' ? 'activa' : 'inactiva'}`} onClick={() => setTabVinos('vinos')}>VINOS & SANGRIAS</button>
-          <button className={`menu-tab ${tabVinos === 'otros' ? 'activa' : 'inactiva'}`} onClick={() => setTabVinos('otros')}>OTROS VINOS</button>
-        </div>
-
-        {tabVinos === 'vinos' && (
-          <div className="row g-3 mx-auto text-start" style={{ maxWidth: '1000px' }}>
-            <div className="col-12 col-md-6">
-              <div className="menu-card h-100 shadow-sm">
-                <h5 className="fw-bold mb-4" style={{ color: '#d83b20' }}>Por Copa</h5>
-                <div className="menu-item mt-3">
-                  <div className="text-start"><span className="fw-bold">Vino Fuego Negro</span><br/><small className="text-muted" style={{fontSize:'0.7rem'}}>(Malbec, C. Sauvignon, Rosé)</small></div>
-                  <span className="menu-dots"></span> <span className="fw-bold">S/22</span>
-                </div>
-                <div className="menu-item"><span>Sangría</span> <span className="menu-dots"></span> <span className="fw-bold">S/13</span></div>
-                <div className="menu-item"><span>Tinto de Verano</span> <span className="menu-dots"></span> <span className="fw-bold">S/22</span></div>
-              </div>
-            </div>
-            <div className="col-12 col-md-6">
-              <div className="menu-card h-100 shadow-sm">
-                <h5 className="fw-bold mb-4" style={{ color: '#d83b20' }}>Por Jarra / Botella</h5>
-                <div className="menu-item"><span>1/2 Jarra Sangría</span> <span className="menu-dots"></span> <span className="fw-bold">S/27</span></div>
-                <div className="menu-item"><span>Jarra Sangría</span> <span className="menu-dots"></span> <span className="fw-bold">S/48</span></div>
-                <div className="menu-item mt-4">
-                  <div className="text-start"><span className="fw-bold">Botella Vino Fuego Negro</span></div>
-                  <span className="menu-dots"></span> <span className="fw-bold">S/85</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-        
-        {tabVinos === 'otros' && (
-          <div className="menu-card mx-auto shadow-sm text-center" style={{ maxWidth: '1000px', padding: '40px' }}>
-             <p className="fw-bold text-muted m-0">Pregunta a tu mesero por nuestra selecta cava de vinos internacionales y de reserva.</p>
-          </div>
-        )}
-
-        <div className="d-flex flex-column flex-md-row justify-content-center w-100 mx-auto mt-5 pt-3" style={{ maxWidth: '1000px' }}>
-          <button className={`menu-tab ${tabBebidas === 'sin-alcohol' ? 'activa' : 'inactiva'}`} onClick={() => setTabBebidas('sin-alcohol')}>SIN ALCOHOL</button>
-          <button className={`menu-tab ${tabBebidas === 'con-alcohol' ? 'activa' : 'inactiva'}`} onClick={() => setTabBebidas('con-alcohol')}>CON ALCOHOL</button>
-        </div>
-
-        {tabBebidas === 'sin-alcohol' && (
-          <div className="row g-3 mx-auto text-start" style={{ maxWidth: '1000px' }}>
-            <div className="col-12 col-md-6">
-              <div className="menu-card h-100 shadow-sm">
-                <h5 className="fw-bold mb-4" style={{ color: '#d83b20' }}>Frías</h5>
-                <div className="menu-item"><span>Agua San Luis</span> <span className="menu-dots"></span> <span className="fw-bold">S/8.9</span></div>
-                <div className="menu-item"><span>Iced Tea Clásico</span> <span className="menu-dots"></span> <span className="fw-bold">S/8.9</span></div>
-                <div className="menu-item"><span>Limonada Clásica</span> <span className="menu-dots"></span> <span className="fw-bold">S/8.9</span></div>
-                <div className="menu-item"><span>Chicha Morada</span> <span className="menu-dots"></span> <span className="fw-bold">S/8.9</span></div>
-              </div>
-            </div>
-            <div className="col-12 col-md-6">
-              <div className="menu-card h-100 shadow-sm">
-                <h5 className="fw-bold mb-4" style={{ color: '#d83b20' }}>Calientes</h5>
-                <div className="menu-item"><span>Café Expresso</span> <span className="menu-dots"></span> <span className="fw-bold">S/7.5</span></div>
-                <div className="menu-item"><span>Café Americano</span> <span className="menu-dots"></span> <span className="fw-bold">S/7.5</span></div>
-                <div className="menu-item"><span>Café Capuccino</span> <span className="menu-dots"></span> <span className="fw-bold">S/8.5</span></div>
-                <div className="menu-item"><span>Infusiones Naturales</span> <span className="menu-dots"></span> <span className="fw-bold">S/6.5</span></div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {tabBebidas === 'con-alcohol' && (
-          <div className="row g-3 mx-auto text-start" style={{ maxWidth: '1000px' }}>
-            <div className="col-12 col-md-6">
-              <div className="menu-card h-100 shadow-sm">
-                <h5 className="fw-bold mb-4" style={{ color: '#d83b20' }}>Con Pisco</h5>
-                <h6 className="fw-bold text-dark mb-3 mt-3">Sours</h6>
-                <div className="menu-item"><span>Pisco Sour</span> <span className="menu-dots"></span> <span className="fw-bold">S/21</span></div>
-                <div className="menu-item"><span>Maracuyá Sour</span> <span className="menu-dots"></span> <span className="fw-bold">S/21</span></div>
-                <h6 className="fw-bold text-dark mb-3 mt-4">Chilcanos</h6>
-                <div className="menu-item"><span>Clásico</span> <span className="menu-dots"></span> <span className="fw-bold">S/20</span></div>
-              </div>
-            </div>
-            <div className="col-12 col-md-6 d-flex flex-column gap-3">
-              <div className="menu-card shadow-sm flex-grow-1">
-                <h5 className="fw-bold mb-3" style={{ color: '#d83b20' }}>Originales</h5>
-                <div className="menu-item"><span>Pisquirinha de fresa</span> <span className="menu-dots"></span> <span className="fw-bold">S/22</span></div>
-                <div className="menu-item"><span>Like Jagger</span> <span className="menu-dots"></span> <span className="fw-bold">S/22</span></div>
-              </div>
-              <div className="menu-card shadow-sm flex-grow-1">
-                <h5 className="fw-bold mb-3" style={{ color: '#d83b20' }}>Con Ron</h5>
-                <div className="menu-item"><span>Mojito</span> <span className="menu-dots"></span> <span className="fw-bold">S/21</span></div>
-                <div className="menu-item"><span>Piña Colada</span> <span className="menu-dots"></span> <span className="fw-bold">S/21</span></div>
-              </div>
-            </div>
-          </div>
-        )}
-      </section>
-
-      <section id="ambientes" className="seccion-ancla container py-5 mb-5">
-        <h2 className="text-center display-5 fw-bold text-white mb-5 fuente-titulos">Espacios Diseñados para Ti</h2>
-        <div className="row text-center">
-          <div className="col-12 col-md-6 mb-4 px-3 px-md-4">
-            <div className="ambiente-card h-100 d-flex flex-column rounded-3 shadow overflow-hidden">
-              <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=1000" alt="Salón" className="img-ambiente" />
-              <div className="p-4 flex-grow-1">
-                <h4 className="fw-bold mb-3 mt-2 fuente-titulos" style={{ color: '#ea580c' }}>Salón Principal</h4>
-                <p className="fw-semibold" style={{ color: '#d1d5db', fontSize: '0.9rem' }}>Ambiente sofisticado. Iluminación tenue y cava a la vista.</p>
-              </div>
-            </div>
-          </div>
-          <div className="col-12 col-md-6 mb-4 px-3 px-md-4">
-            <div className="ambiente-card h-100 d-flex flex-column rounded-3 shadow overflow-hidden">
-              <img src="https://media.timeout.com/images/105490616/750/562/image.jpg" alt="Terraza" className="img-ambiente" />
-              <div className="p-4 flex-grow-1">
-                <h4 className="fw-bold mb-3 mt-2 fuente-titulos" style={{ color: '#ea580c' }}>La Terraza</h4>
-                <p className="fw-semibold" style={{ color: '#d1d5db', fontSize: '0.9rem' }}>La mejor vista al aire libre con coctelería de autor.</p>
+              <div className="d-flex gap-3">
+                <button className="btn btn-outline-light flex-grow-1" onClick={() => setReservaDetalle(null)}>
+                  Cerrar
+                </button>
+                <button className="btn btn-danger flex-grow-1 d-flex justify-content-center align-items-center gap-2" onClick={() => handleCancelarReserva(reservaDetalle.id)}>
+                  <Trash2 size={18} /> Cancelar Reserva
+                </button>
               </div>
             </div>
           </div>
         </div>
-      </section>
+      )}
 
-      <footer className="pt-5 mt-5 text-center text-md-start" style={{ backgroundColor: '#0c0c0c', borderTop: '1px solid #1a1a1a' }}>
+      {/* FOOTER GENERAL */}
+      <footer className="pt-5 mt-auto text-center text-md-start" style={{ backgroundColor: '#0c0c0c', borderTop: '1px solid #1a1a1a' }}>
         <div className="container pb-4 pb-md-5">
           <div className="row g-4">
             <div className="col-12 col-lg-4 mb-3">
               <h4 className="fw-bold mb-2 fuente-titulos" style={{ color: '#fff' }}>FUEGO <span style={{ color: '#ea580c' }}>NEGRO</span></h4>
               <p className="fw-bold" style={{ color: '#a3a3a3', fontSize: '0.85rem' }}>Pasión por cada plato</p>
-              <div className="d-flex gap-2 justify-content-center justify-content-lg-start mt-3"><a href="#" className="social-icon">FB</a><a href="#" className="social-icon">IG</a></div>
+              <div className="d-flex gap-2 justify-content-center justify-content-lg-start mt-3">
+                <a href="#" className="social-icon">FB</a><a href="#" className="social-icon">IG</a>
+              </div>
             </div>
             <div className="col-12 col-md-6 col-lg-4">
               <h6 className="text-white mb-3 fw-bold">Menú</h6>
               <ul className="list-unstyled fw-semibold" style={{ lineHeight: '2', fontSize: '0.9rem' }}>
-                <li><a href="#historia" className="text-decoration-none" style={{ color: '#a3a3a3' }}>Nosotros</a></li>
-                <li><a href="#carta" className="text-decoration-none" style={{ color: '#a3a3a3' }}>Nuestra Carta</a></li>
+                <li><a onClick={() => irASeccion('historia')} className="text-decoration-none" style={{ color: '#a3a3a3', cursor: 'pointer' }}>Nosotros</a></li>
+                <li><a onClick={() => irASeccion('carta')} className="text-decoration-none" style={{ color: '#a3a3a3', cursor: 'pointer' }}>Nuestra Carta</a></li>
               </ul>
             </div>
             <div className="col-12 col-md-6 col-lg-4">
