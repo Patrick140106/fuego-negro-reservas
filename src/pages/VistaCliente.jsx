@@ -158,10 +158,14 @@ const VistaCliente = () => {
           <a className="navbar-brand fuente-titulos fs-4 fs-md-3" style={{ letterSpacing: '2px', fontWeight: '700' }} href="#">
             FUEGO <span style={{ color: '#ea580c' }}>NEGRO</span>
           </a>
-          <button className="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" onClick={() => setMenuAbierto(!menuAbierto)}>
+          
+          {/* Aquí le damos el control total a React y quitamos los atributos por defecto de Bootstrap */}
+          <button className="navbar-toggler border-0 shadow-none" type="button" onClick={() => setMenuAbierto(!menuAbierto)}>
             {menuAbierto ? <X color="white" /> : <Menu color="white" />}
           </button>
-          <div className="collapse navbar-collapse text-center text-lg-start" id="navbarNav">
+          
+          {/* Agregamos la clase 'show' condicionalmente basada en nuestro estado menuAbierto */}
+          <div className={`collapse navbar-collapse text-center text-lg-start ${menuAbierto ? 'show' : ''}`} id="navbarNav">
             <ul className="navbar-nav mx-auto py-3 py-lg-0">
               <li className="nav-item"><a className="nav-link nav-link-custom my-2 my-lg-0" href="#historia" onClick={() => setMenuAbierto(false)}>Nosotros</a></li>
               <li className="nav-item"><a className="nav-link nav-link-custom my-2 my-lg-0" href="#estaciones" onClick={() => setMenuAbierto(false)}>Estaciones</a></li>

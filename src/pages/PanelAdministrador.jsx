@@ -147,8 +147,12 @@ const PanelAdministrador = () => {
 
         {vistaActiva === 'mesas' && (
           <div className="card shadow-sm border-0 rounded-4">
-            <div className="card-body p-3 p-md-4">
-              <VistaMesas reservas={reservas} />
+            {/* Agregamos overflowX para habilitar el scroll táctil */}
+            <div className="card-body p-3 p-md-4" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+              {/* Forzamos un ancho mínimo para que el plano NO se aplaste */}
+              <div style={{ minWidth: '800px', paddingBottom: '15px' }}>
+                <VistaMesas reservas={reservas} />
+              </div>
             </div>
           </div>
         )}
