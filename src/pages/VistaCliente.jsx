@@ -8,14 +8,12 @@ const VistaCliente = () => {
   const { reservas, agregarReserva, eliminarReserva } = useContext(ReservasContext);
   const [scrolled, setScrolled] = useState(false);
   const [usuarioActual, setUsuarioActual] = useState(null);
-  const [menuAbierto, setMenuAbierto] = useState(false); // Para controlar el icono del navbar móvil
+  const [menuAbierto, setMenuAbierto] = useState(false); 
   
-  // ESTADOS DEL MENÚ INTERACTIVO
   const [tabComida, setTabComida] = useState('precios');
   const [tabVinos, setTabVinos] = useState('vinos');
   const [tabBebidas, setTabBebidas] = useState('sin-alcohol');
 
-  // ESTADOS PARA LOS MODALES
   const [pasoModal, setPasoModal] = useState(0); 
   const [mostrarPerfil, setMostrarPerfil] = useState(false);
 
@@ -50,8 +48,9 @@ const VistaCliente = () => {
   const abrirModal = () => { 
     setPasoModal(1); 
     setDatosReserva({ ...datosReserva, mesa: '', hora: '' });
-    setMenuAbierto(false); // Cierra el menú móvil si estaba abierto
+    setMenuAbierto(false); 
   };
+  
   const cerrarModal = () => setPasoModal(0);
   
   const seleccionarMesa = (mesa, zona) => {
@@ -84,7 +83,6 @@ const VistaCliente = () => {
     <div style={{ backgroundColor: '#0a0a0a', color: '#ffffff', minHeight: '100vh', overflowX: 'hidden' }}>
       <Toaster richColors position="top-center" />
 
-      {/* ESTILOS OPTIMIZADOS PARA MÓVIL Y ESCRITORIO */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap');
 
@@ -115,13 +113,14 @@ const VistaCliente = () => {
         .hora-btn.seleccionada { background: #ea580c; color: #fff; }
         .hora-btn:disabled { border-color: #444; color: #555; cursor: not-allowed; text-decoration: line-through; }
 
-        .menu-tab { flex: 1; padding: 15px; text-align: center; font-weight: 700; font-family: 'Montserrat', sans-serif; cursor: pointer; transition: 0.3s; letter-spacing: 1px; font-size: 0.85rem; }
+        .menu-tab { flex: 1; padding: 15px; text-align: center; font-weight: 700; font-family: 'Montserrat', sans-serif; cursor: pointer; transition: 0.3s; letter-spacing: 1px; font-size: 0.85rem; border-radius: 4px; margin: 0 4px; }
         .menu-tab.activa { background-color: #d83b20; color: white; border: none; }
         .menu-tab.inactiva { background-color: #ffffff; color: #1a1a1a; border: none; }
         .menu-card { background-color: #ffffff; padding: 35px; font-family: 'Montserrat', sans-serif; color: #1a1a1a; border-radius: 8px; }
         .menu-item { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 12px; }
         .menu-dots { flex-grow: 1; border-bottom: 2px dotted #999; margin: 0 15px; position: relative; top: -5px; }
-        .menu-img-grid { width: 100%; height: 100%; object-fit: cover; }
+        
+        .postre-img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         
         .hero-section { background-image: linear-gradient(to bottom, rgba(0,0,0,0.7), #0a0a0a), url('https://images.unsplash.com/photo-1559339352-11d035aa65de?q=80&w=2000'); background-size: cover; background-position: center; background-attachment: fixed; }
         .hero-title { font-size: 4rem; text-shadow: 0 4px 20px rgba(0,0,0,0.8); }
@@ -139,13 +138,12 @@ const VistaCliente = () => {
         .social-icon { display: inline-flex; align-items: center; justify-content: center; width: 35px; height: 35px; background-color: #1a1a1a; border-radius: 50%; color: #fff; text-decoration: none; transition: all 0.3s; font-weight: bold; }
         .social-icon:hover { background-color: #ea580c; transform: translateY(-3px); }
 
-        /* MEDIA QUERIES PARA MÓVILES (Responsive Magic) */
         @media (max-width: 768px) {
           .hero-title { font-size: 2.2rem !important; letter-spacing: 0px !important; }
           .hero-subtitle { font-size: 0.75rem !important; letter-spacing: 2px !important; }
           .img-historia { height: 300px; }
           .menu-card { padding: 20px 15px !important; }
-          .menu-tab { padding: 10px; font-size: 0.7rem; flex-wrap: wrap; }
+          .menu-tab { padding: 10px; font-size: 0.7rem; flex-basis: 100%; margin-bottom: 5px; }
           .navbar-collapse { background-color: #121212; padding: 20px; border-radius: 8px; margin-top: 15px; border: 1px solid #333; }
           .tarjeta-seleccion { padding: 1.5rem !important; }
           .modal-box-elegante { margin-top: 20px; margin-bottom: 20px; }
@@ -155,7 +153,6 @@ const VistaCliente = () => {
         }
       `}</style>
 
-      {/* NAVBAR RESPONSIVO */}
       <nav className={`navbar navbar-expand-lg navbar-dark fixed-top w-100 p-3 p-md-4 navbar-transicion ${scrolled || menuAbierto ? 'nav-scrolled' : 'bg-transparent'}`}>
         <div className="container">
           <a className="navbar-brand fuente-titulos fs-4 fs-md-3" style={{ letterSpacing: '2px', fontWeight: '700' }} href="#">
@@ -183,7 +180,6 @@ const VistaCliente = () => {
         </div>
       </nav>
 
-      {/* MODAL: MI PERFIL / HISTORIAL */}
       {mostrarPerfil && (
         <div className="modal-overlay-elegante">
           <div className="modal-box-elegante p-0" style={{ maxWidth: '700px' }}>
@@ -226,7 +222,6 @@ const VistaCliente = () => {
         </div>
       )}
 
-      {/* MODAL WIZARD DE RESERVA */}
       {pasoModal > 0 && (
         <div className="modal-overlay-elegante">
           <div className="modal-box-elegante p-0">
@@ -394,7 +389,6 @@ const VistaCliente = () => {
         </div>
       )}
 
-      {/* HERO SECTION */}
       <header className="hero-section position-relative d-flex align-items-center justify-content-center text-center" style={{ height: '100vh', minHeight: '500px' }}>
         <div className="position-relative px-3" style={{ zIndex: 2, maxWidth: '900px', marginTop: '60px' }}>
           <h5 className="fw-bold hero-subtitle fuente-textos" style={{ color: '#ea580c', letterSpacing: '5px', textTransform: 'uppercase', marginBottom: '20px', fontSize: '0.85rem' }}>La Excelencia a la Brasa</h5>
@@ -402,7 +396,6 @@ const VistaCliente = () => {
         </div>
       </header>
 
-      {/* SECCIÓN: HISTORIA */}
       <section id="historia" className="seccion-ancla container py-5 my-3 my-md-5">
         <div className="row align-items-center">
           <div className="col-md-6 pe-md-5 mb-4 text-center text-md-start">
@@ -416,7 +409,6 @@ const VistaCliente = () => {
         </div>
       </section>
 
-      {/* SECCIÓN: ESTACIONES */}
       <section id="estaciones" className="seccion-ancla py-5 my-3 my-md-5" style={{ backgroundColor: '#111' }}>
         <div className="container py-4">
           <div className="text-center mb-4 mb-md-5">
@@ -452,55 +444,100 @@ const VistaCliente = () => {
         </div>
       </section>
 
-      {/* SECCIÓN: NUESTRA CARTA */}
-      <section id="carta" className="seccion-ancla container py-5 my-3 my-md-5 text-center px-2 px-md-auto">
+      <section id="carta" className="seccion-ancla container py-5 my-3 my-md-5 text-center px-3">
         <h2 className="fs-1 fw-bold text-white mb-4 fuente-titulos">Nuestra Carta</h2>
         <p className="mb-4 py-3 border-top border-bottom fw-bold" style={{ color: '#a3a3a3', letterSpacing: '2px', fontSize: '0.75rem', borderColor: '#333 !important' }}>
           TOMAR BEBIDAS ALCOHÓLICAS EN EXCESO ES DAÑINO
         </p>
 
-        {/* --- COMIDA --- */}
-        <div className="d-flex w-100 mx-auto mt-4" style={{ maxWidth: '1000px' }}>
-          <button className={`menu-tab ${tabComida === 'precios' ? 'activa' : 'inactiva'}`} onClick={() => setTabComida('precios')}>PRECIOS</button>
+        <div className="d-flex flex-column flex-md-row justify-content-center w-100 mx-auto mt-4" style={{ maxWidth: '1000px' }}>
+          <button className={`menu-tab ${tabComida === 'precios' ? 'activa' : 'inactiva'}`} onClick={() => setTabComida('precios')}>NUESTROS PRECIOS</button>
           <button className={`menu-tab ${tabComida === 'postres' ? 'activa' : 'inactiva'}`} onClick={() => setTabComida('postres')}>POSTRES</button>
         </div>
         
         {tabComida === 'precios' && (
           <div className="menu-card mx-auto text-center shadow-sm" style={{ maxWidth: '1000px' }}>
             <h4 className="fw-bold mb-4" style={{ color: '#d83b20' }}>Buffet Libre</h4>
-            <div className="menu-item mx-auto" style={{ maxWidth: '500px' }}><span className="fw-bold">Adultos</span> <span className="menu-dots"></span> <span className="fw-bold">S/99</span></div>
-            <div className="menu-item mx-auto mb-4" style={{ maxWidth: '500px' }}>
+            <div className="menu-item mx-auto" style={{ maxWidth: '700px' }}><span className="fw-bold">Adultos</span> <span className="menu-dots"></span> <span className="fw-bold">S/99</span></div>
+            <div className="menu-item mx-auto mb-4" style={{ maxWidth: '700px' }}>
               <div className="text-start"><span className="fw-bold">Niños</span><br/><small className="text-muted" style={{fontSize:'0.7rem'}}>(4 a 10 años)</small></div>
               <span className="menu-dots"></span> <span className="fw-bold">S/46</span>
             </div>
-            <p className="text-muted mt-3 mb-1" style={{ fontSize: '0.8rem' }}>Incluye IGV. No incluye bebidas.</p>
+            <p className="text-muted mt-3 mb-1 fw-semibold" style={{ fontSize: '0.85rem' }}>Almuerzo y cena buffet de Lunes a Domingo y feriados</p>
+            <p className="text-muted mb-1 fw-semibold" style={{ fontSize: '0.85rem' }}>Incluye IGV (18%). No incluye bebidas.</p>
           </div>
         )}
 
         {tabComida === 'postres' && (
           <div className="mx-auto shadow-sm overflow-hidden bg-white text-start rounded" style={{ maxWidth: '1000px' }}>
             <div className="row g-0">
-              <div className="col-md-6 p-4 d-flex flex-column justify-content-center">
-                <h4 className="fw-bold mb-3 text-center" style={{ color: '#d83b20' }}>Postres</h4>
-                <div style={{ fontSize: '0.9rem' }}>
-                  <p className="fw-bold mb-2 text-dark">Pasión De Chocolate</p>
-                  <p className="fw-bold mb-2 text-dark">Panqueque De Carretera</p>
-                  <p className="fw-bold mb-2 text-dark">Volcán Dulce De Leche</p>
-                  <p className="fw-bold mb-2 text-dark">Tres Leches & Tiramisú</p>
+              <div className="col-md-6 p-4 p-md-5 d-flex flex-column justify-content-center">
+                <h4 className="fw-bold mb-4" style={{ color: '#d83b20' }}>Postres</h4>
+                <p className="fw-bold mb-2 text-dark">Pasión De Chocolate</p>
+                <p className="fw-bold mb-2 text-dark">Panqueque De Carretera</p>
+                <p className="fw-bold mb-2 text-dark">Volcán Dulce De Leche</p>
+                <p className="fw-bold mb-2 text-dark">Tres Leches</p>
+                <p className="fw-bold mb-2 text-dark">Tiramisú</p>
+                <p className="fw-bold mb-2 text-dark">Torta Húmeda De Chocolate</p>
+                
+                <div className="menu-item mx-auto mt-4" style={{ width: '100%' }}>
+                  <span className="text-dark">Postre adicional</span> <span className="menu-dots"></span> <span className="fw-bold text-dark">S/16.5</span>
                 </div>
-                <div className="menu-item mx-auto mt-3" style={{ width: '100%' }}>
-                  <span className="text-dark" style={{fontSize: '0.85rem'}}>Postre extra</span> <span className="menu-dots"></span> <span className="fw-bold text-dark">S/16.5</span>
+                <div className="menu-item mx-auto" style={{ width: '100%' }}>
+                  <span className="text-dark">Helado adicional</span> <span className="menu-dots"></span> <span className="fw-bold text-dark">S/6.5</span>
                 </div>
               </div>
-              <div className="col-md-6 d-none d-md-block">
-                <img src="https://images.unsplash.com/photo-1606313564200-e75d5e30476c?q=80&w=400" className="menu-img-grid" style={{height: '300px'}} alt="Postre"/>
+              <div className="col-md-6 p-3 p-md-4 bg-light">
+                <div className="row g-2 h-100 align-content-center">
+                  <div className="col-6"><img src="https://images.unsplash.com/photo-1606313564200-e75d5e30476c?q=80&w=400" className="postre-img" alt="Postre 1"/></div>
+                  <div className="col-6"><img src="https://plus.unsplash.com/premium_photo-1672846027109-e2c91500afef?w=500&auto=format&fit=crop&q=60" className="postre-img" alt="Postre 2"/></div>
+                  <div className="col-6"><img src="https://gourmet.iprospect.cl/wp-content/uploads/2016/09/Torta-3-leches.jpg" className="postre-img" alt="Postre 3"/></div>
+                  <div className="col-6"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQTEmN5y6s1Ftlt2099hKZusWeF4yuqetcfTw&s" className="postre-img" alt="Postre 4"/></div>
+                </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* --- BEBIDAS  --- */}
-        <div className="d-flex w-100 mx-auto mt-5 pt-3" style={{ maxWidth: '1000px' }}>
+        <div className="d-flex flex-column flex-md-row justify-content-center w-100 mx-auto mt-5 pt-3" style={{ maxWidth: '1000px' }}>
+          <button className={`menu-tab ${tabVinos === 'vinos' ? 'activa' : 'inactiva'}`} onClick={() => setTabVinos('vinos')}>VINOS & SANGRIAS</button>
+          <button className={`menu-tab ${tabVinos === 'otros' ? 'activa' : 'inactiva'}`} onClick={() => setTabVinos('otros')}>OTROS VINOS</button>
+        </div>
+
+        {tabVinos === 'vinos' && (
+          <div className="row g-3 mx-auto text-start" style={{ maxWidth: '1000px' }}>
+            <div className="col-12 col-md-6">
+              <div className="menu-card h-100 shadow-sm">
+                <h5 className="fw-bold mb-4" style={{ color: '#d83b20' }}>Por Copa</h5>
+                <div className="menu-item mt-3">
+                  <div className="text-start"><span className="fw-bold">Vino Fuego Negro</span><br/><small className="text-muted" style={{fontSize:'0.7rem'}}>(Malbec, C. Sauvignon, Rosé)</small></div>
+                  <span className="menu-dots"></span> <span className="fw-bold">S/22</span>
+                </div>
+                <div className="menu-item"><span>Sangría</span> <span className="menu-dots"></span> <span className="fw-bold">S/13</span></div>
+                <div className="menu-item"><span>Tinto de Verano</span> <span className="menu-dots"></span> <span className="fw-bold">S/22</span></div>
+              </div>
+            </div>
+            <div className="col-12 col-md-6">
+              <div className="menu-card h-100 shadow-sm">
+                <h5 className="fw-bold mb-4" style={{ color: '#d83b20' }}>Por Jarra / Botella</h5>
+                <div className="menu-item"><span>1/2 Jarra Sangría</span> <span className="menu-dots"></span> <span className="fw-bold">S/27</span></div>
+                <div className="menu-item"><span>Jarra Sangría</span> <span className="menu-dots"></span> <span className="fw-bold">S/48</span></div>
+                <div className="menu-item mt-4">
+                  <div className="text-start"><span className="fw-bold">Botella Vino Fuego Negro</span></div>
+                  <span className="menu-dots"></span> <span className="fw-bold">S/85</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {tabVinos === 'otros' && (
+          <div className="menu-card mx-auto shadow-sm text-center" style={{ maxWidth: '1000px', padding: '40px' }}>
+             <p className="fw-bold text-muted m-0">Pregunta a tu mesero por nuestra selecta cava de vinos internacionales y de reserva.</p>
+          </div>
+        )}
+
+        <div className="d-flex flex-column flex-md-row justify-content-center w-100 mx-auto mt-5 pt-3" style={{ maxWidth: '1000px' }}>
           <button className={`menu-tab ${tabBebidas === 'sin-alcohol' ? 'activa' : 'inactiva'}`} onClick={() => setTabBebidas('sin-alcohol')}>SIN ALCOHOL</button>
           <button className={`menu-tab ${tabBebidas === 'con-alcohol' ? 'activa' : 'inactiva'}`} onClick={() => setTabBebidas('con-alcohol')}>CON ALCOHOL</button>
         </div>
@@ -509,32 +546,77 @@ const VistaCliente = () => {
           <div className="row g-3 mx-auto text-start" style={{ maxWidth: '1000px' }}>
             <div className="col-12 col-md-6">
               <div className="menu-card h-100 shadow-sm">
-                <h5 className="fw-bold mb-3" style={{ color: '#d83b20' }}>Refrescantes</h5>
-                <div className="menu-item"><span style={{fontSize: '0.9rem'}}>Limonada Clásica</span> <span className="menu-dots"></span> <span className="fw-bold">S/8.9</span></div>
-                <div className="menu-item"><span style={{fontSize: '0.9rem'}}>Chicha Morada</span> <span className="menu-dots"></span> <span className="fw-bold">S/8.9</span></div>
-                <div className="menu-item"><span style={{fontSize: '0.9rem'}}>Iced Tea</span> <span className="menu-dots"></span> <span className="fw-bold">S/8.9</span></div>
+                <h5 className="fw-bold mb-4" style={{ color: '#d83b20' }}>Frías</h5>
+                <div className="menu-item"><span>Agua San Luis</span> <span className="menu-dots"></span> <span className="fw-bold">S/8.9</span></div>
+                <div className="menu-item"><span>Iced Tea Clásico</span> <span className="menu-dots"></span> <span className="fw-bold">S/8.9</span></div>
+                <div className="menu-item"><span>Limonada Clásica</span> <span className="menu-dots"></span> <span className="fw-bold">S/8.9</span></div>
+                <div className="menu-item"><span>Chicha Morada</span> <span className="menu-dots"></span> <span className="fw-bold">S/8.9</span></div>
               </div>
             </div>
             <div className="col-12 col-md-6">
               <div className="menu-card h-100 shadow-sm">
-                <h5 className="fw-bold mb-3" style={{ color: '#d83b20' }}>Cafetería</h5>
-                <div className="menu-item"><span style={{fontSize: '0.9rem'}}>Café Americano</span> <span className="menu-dots"></span> <span className="fw-bold">S/7.5</span></div>
-                <div className="menu-item"><span style={{fontSize: '0.9rem'}}>Capuccino</span> <span className="menu-dots"></span> <span className="fw-bold">S/8.5</span></div>
-                <div className="menu-item"><span style={{fontSize: '0.9rem'}}>Infusiones</span> <span className="menu-dots"></span> <span className="fw-bold">S/6.5</span></div>
+                <h5 className="fw-bold mb-4" style={{ color: '#d83b20' }}>Calientes</h5>
+                <div className="menu-item"><span>Café Expresso</span> <span className="menu-dots"></span> <span className="fw-bold">S/7.5</span></div>
+                <div className="menu-item"><span>Café Americano</span> <span className="menu-dots"></span> <span className="fw-bold">S/7.5</span></div>
+                <div className="menu-item"><span>Café Capuccino</span> <span className="menu-dots"></span> <span className="fw-bold">S/8.5</span></div>
+                <div className="menu-item"><span>Infusiones Naturales</span> <span className="menu-dots"></span> <span className="fw-bold">S/6.5</span></div>
               </div>
             </div>
           </div>
         )}
 
         {tabBebidas === 'con-alcohol' && (
-          <div className="menu-card mx-auto shadow-sm text-center" style={{ maxWidth: '1000px' }}>
-             <h5 className="fw-bold mb-3" style={{ color: '#d83b20' }}>Coctelería & Vinos</h5>
-             <p className="fw-bold text-muted m-0" style={{ fontSize: '0.9rem' }}>Pregunta a tu mesero por nuestra selecta cava de vinos, sours y chilcanos.</p>
+          <div className="row g-3 mx-auto text-start" style={{ maxWidth: '1000px' }}>
+            <div className="col-12 col-md-6">
+              <div className="menu-card h-100 shadow-sm">
+                <h5 className="fw-bold mb-4" style={{ color: '#d83b20' }}>Con Pisco</h5>
+                <h6 className="fw-bold text-dark mb-3 mt-3">Sours</h6>
+                <div className="menu-item"><span>Pisco Sour</span> <span className="menu-dots"></span> <span className="fw-bold">S/21</span></div>
+                <div className="menu-item"><span>Maracuyá Sour</span> <span className="menu-dots"></span> <span className="fw-bold">S/21</span></div>
+                <h6 className="fw-bold text-dark mb-3 mt-4">Chilcanos</h6>
+                <div className="menu-item"><span>Clásico</span> <span className="menu-dots"></span> <span className="fw-bold">S/20</span></div>
+              </div>
+            </div>
+            <div className="col-12 col-md-6 d-flex flex-column gap-3">
+              <div className="menu-card shadow-sm flex-grow-1">
+                <h5 className="fw-bold mb-3" style={{ color: '#d83b20' }}>Originales</h5>
+                <div className="menu-item"><span>Pisquirinha de fresa</span> <span className="menu-dots"></span> <span className="fw-bold">S/22</span></div>
+                <div className="menu-item"><span>Like Jagger</span> <span className="menu-dots"></span> <span className="fw-bold">S/22</span></div>
+              </div>
+              <div className="menu-card shadow-sm flex-grow-1">
+                <h5 className="fw-bold mb-3" style={{ color: '#d83b20' }}>Con Ron</h5>
+                <div className="menu-item"><span>Mojito</span> <span className="menu-dots"></span> <span className="fw-bold">S/21</span></div>
+                <div className="menu-item"><span>Piña Colada</span> <span className="menu-dots"></span> <span className="fw-bold">S/21</span></div>
+              </div>
+            </div>
           </div>
         )}
       </section>
 
-      {/* FOOTER */}
+      <section id="ambientes" className="seccion-ancla container py-5 mb-5">
+        <h2 className="text-center display-5 fw-bold text-white mb-5 fuente-titulos">Espacios Diseñados para Ti</h2>
+        <div className="row text-center">
+          <div className="col-12 col-md-6 mb-4 px-3 px-md-4">
+            <div className="ambiente-card h-100 d-flex flex-column rounded-3 shadow overflow-hidden">
+              <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=1000" alt="Salón" className="img-ambiente" />
+              <div className="p-4 flex-grow-1">
+                <h4 className="fw-bold mb-3 mt-2 fuente-titulos" style={{ color: '#ea580c' }}>Salón Principal</h4>
+                <p className="fw-semibold" style={{ color: '#d1d5db', fontSize: '0.9rem' }}>Ambiente sofisticado. Iluminación tenue y cava a la vista.</p>
+              </div>
+            </div>
+          </div>
+          <div className="col-12 col-md-6 mb-4 px-3 px-md-4">
+            <div className="ambiente-card h-100 d-flex flex-column rounded-3 shadow overflow-hidden">
+              <img src="https://media.timeout.com/images/105490616/750/562/image.jpg" alt="Terraza" className="img-ambiente" />
+              <div className="p-4 flex-grow-1">
+                <h4 className="fw-bold mb-3 mt-2 fuente-titulos" style={{ color: '#ea580c' }}>La Terraza</h4>
+                <p className="fw-semibold" style={{ color: '#d1d5db', fontSize: '0.9rem' }}>La mejor vista al aire libre con coctelería de autor.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <footer className="pt-5 mt-5 text-center text-md-start" style={{ backgroundColor: '#0c0c0c', borderTop: '1px solid #1a1a1a' }}>
         <div className="container pb-4 pb-md-5">
           <div className="row g-4">
