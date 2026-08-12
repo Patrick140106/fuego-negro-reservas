@@ -20,7 +20,7 @@ export const ReservasProvider = ({ children }) => {
   useEffect(() => {
     fetchReservas();
 
-    // Intentamos escuchar cambios en tiempo real (por si luego lo activas en Supabase)
+    // Intentamos escuchar cambios en tiempo real
     const canal = supabase
       .channel('cambios_reservas')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'reservas' }, () => {
@@ -33,8 +33,6 @@ export const ReservasProvider = ({ children }) => {
     };
   }, [fetchReservas]);
 
-  // --- AQUÍ ESTÁ LA MAGIA DE LA CORRECCIÓN ---
-  // Ahora, después de cada operación exitosa, forzamos la actualización visual llamando a fetchReservas()
 
   const agregarReserva = useCallback(async (nuevaReserva) => {
     const { error } = await supabase.from('reservas').insert([nuevaReserva]);

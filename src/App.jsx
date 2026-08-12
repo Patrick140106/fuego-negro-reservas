@@ -76,7 +76,7 @@ function App() {
         </button>
       </div>
 
-      {/* MAGIA: Decide qué pantalla mostrar basándose en el rol de la base de datos */}
+      {/*Decide qué pantalla mostrar basándose en el rol de la base de datos */}
       {rol === 'admin' ? <PanelAdministrador /> : <VistaCliente />}
       
     </div>

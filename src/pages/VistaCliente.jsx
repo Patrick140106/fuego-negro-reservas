@@ -499,7 +499,7 @@ const VistaCliente = () => {
           </div>
         )}
 
-        {/* --- BEBIDAS (Ejemplo resumido para móvil) --- */}
+        {/* --- BEBIDAS  --- */}
         <div className="d-flex w-100 mx-auto mt-5 pt-3" style={{ maxWidth: '1000px' }}>
           <button className={`menu-tab ${tabBebidas === 'sin-alcohol' ? 'activa' : 'inactiva'}`} onClick={() => setTabBebidas('sin-alcohol')}>SIN ALCOHOL</button>
           <button className={`menu-tab ${tabBebidas === 'con-alcohol' ? 'activa' : 'inactiva'}`} onClick={() => setTabBebidas('con-alcohol')}>CON ALCOHOL</button>
