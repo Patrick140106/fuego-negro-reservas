@@ -700,7 +700,7 @@ const VistaCliente = () => {
               <div className="text-center mb-4">
                 <CheckCircle size={48} color="#10b981" className="mx-auto mb-3" />
                 <h4 className="text-white fw-bold m-0">{reservaDetalle.sede}</h4>
-                <p className="text-muted m-0 mt-1">{reservaDetalle.fecha} • {reservaDetalle.hora}</p>
+                <p className="text-light m-0 mt-1">{reservaDetalle.fecha} • {reservaDetalle.hora}</p>
                 <span className={`badge mt-3 px-4 py-2 fs-6 ${reservaDetalle.estado === 'pendiente' ? 'bg-warning text-dark' : 'bg-success'}`}>
                   {reservaDetalle.estado.toUpperCase()}
                 </span>
@@ -708,16 +708,16 @@ const VistaCliente = () => {
 
               <div className="bg-dark rounded p-3 mb-4 border border-secondary text-light" style={{ fontSize: '0.9rem', lineHeight: '2' }}>
                 <div className="d-flex justify-content-between border-bottom border-secondary pb-2 mb-2">
-                  <span className="text-muted">A nombre de:</span> <span className="fw-bold">{reservaDetalle.cliente}</span>
+                  <span className="text-light">A nombre de:</span> <span className="fw-bold">{reservaDetalle.cliente}</span>
                 </div>
                 <div className="d-flex justify-content-between border-bottom border-secondary pb-2 mb-2">
-                  <span className="text-muted">Teléfono:</span> <span className="fw-bold">{reservaDetalle.telefono}</span>
+                  <span className="text-light">Teléfono:</span> <span className="fw-bold">{reservaDetalle.telefono}</span>
                 </div>
                 <div className="d-flex justify-content-between border-bottom border-secondary pb-2 mb-2">
-                  <span className="text-muted">Ubicación:</span> <span className="fw-bold">{reservaDetalle.zona} ({reservaDetalle.mesa})</span>
+                  <span className="text-light">Ubicación:</span> <span className="fw-bold">{reservaDetalle.zona} ({reservaDetalle.mesa})</span>
                 </div>
                 <div className="d-flex justify-content-between">
-                  <span className="text-muted">Comensales:</span> <span className="fw-bold">{reservaDetalle.personas} Personas</span>
+                  <span className="text-light">Comensales:</span> <span className="fw-bold">{reservaDetalle.personas} Personas</span>
                 </div>
               </div>
 
